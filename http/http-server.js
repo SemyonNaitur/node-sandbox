@@ -41,7 +41,7 @@ class HttpServer {
         if (this._created) throw new Error('Server already created');
         const server = http.createServer((req, res) => {
             this._log('--- Request start ---');
-            const url = req.url.replace(/(^\/|\/$)/g, '');
+            const url = req.url.replace(/\/{2,}/g, '/').replace(/^\/|\/$/g, '');
             this._log(url);
             const matchedRoute = this._matchUrl(url);
 

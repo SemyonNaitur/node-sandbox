@@ -32,9 +32,14 @@ class URouter {
      * Transforms the path to a regex by replacing each named url segment
      * with a corresponding named capturing group - e.g., :id -> (?<id>[^/]+)
      * A trailing '/...' notation is transformed to '_restString' group.
+     * 
+     * Leading '/' is removed.
      */
     _parsePath(route) {
-        const patt = route.path.replace(/:([^/]+)/g, '(?<$1>[^/]+)').replace(/\.{3}$/, '(?<_restString>.+)?');
+        let patt = route.path.replace(/^\//, ''); // remove leading '/'
+        patt = patt.replace(/:([^/]+)/g, '(?<$1>[^/]+)'); // parse params
+        patt = patt.replace(/\.{3}$/, '(?<_restString>.+)?'); // parse rest string
+        this._log(patt);
         const rgx = new RegExp(`^${patt}$`);
         return Object.assign({}, route, { rgx });
     }
@@ -54,6 +59,7 @@ class URouter {
     matchUrl(url) {
         let ret;
         let match;
+        url = url.replace(/\/{2,}/g, '/').replace(/^\/|\/$/g, '');
         let matchedRoute = this._routes.find(route => {
             match = route.rgx.exec(url);
             return match;

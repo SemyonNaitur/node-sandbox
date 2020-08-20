@@ -3,7 +3,7 @@ const URouter = require('../utils/router');
 const HttpServer = require('./http-server');
 
 const routes = [
-    { path: 'print-request', func: printRequest },
+    { path: '/print-request', func: printRequest },
     { path: 'cat-id-prop/:cat/:id/:prop', func: catIdProp },
     { path: 'cat-id-props/:cat/:id/...', func: catIdProps },
     { path: 'not-found', func: notFound },
