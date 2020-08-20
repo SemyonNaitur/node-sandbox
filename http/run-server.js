@@ -49,7 +49,7 @@ function catIdProp(req, res, params) {
 
 function catIdProps(req, res, params) {
     if (params.restParams.length === 1) {
-        const to = server.getUrl(req).replace(/\/(cat-id-prop)s\//, '/$1/');
+        const to = server.getUri(req).replace(/\/(cat-id-prop)s\//, '/$1/');
         return server.redirect(res, to);
     }
     const data = `Displaying properties '${params.restParams.join()}' of item #${params.id} from category '${params.cat}'.`;

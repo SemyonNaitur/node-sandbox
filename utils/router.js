@@ -44,6 +44,17 @@ class URouter {
         return Object.assign({}, route, { rgx });
     }
 
+    _parseUrl(url) {
+        let [path, queryString] = url.split('?');
+        path = path.replace(/\/{2,}/g, '/').replace(/^\/|\/$/g, '');
+        const queryParams = {};
+        queryString.split('&').forEach(param => {
+            const [key, value] = param.split('=');
+            queryParams[key] = value;
+        });
+        return { path, queryString, queryParams };
+    }
+
     _log(msg) {
         if (this._logger) {
 
@@ -53,15 +64,15 @@ class URouter {
     }
 
     /**
-     * @param {string} url
+     * @param {string} url - <path>[?<queryString>] - without domain.
      * @return {{path: string, func: Function, params: Object.<string, string>} | undefined}
      */
     matchUrl(url) {
         let ret;
         let match;
-        url = url.replace(/\/{2,}/g, '/').replace(/^\/|\/$/g, '');
+        const urlData = this._parseUrl(url);
         let matchedRoute = this._routes.find(route => {
-            match = route.rgx.exec(url);
+            match = route.rgx.exec(urlData.path);
             return match;
         });
 
@@ -74,6 +85,7 @@ class URouter {
             if (params._restString) {
                 params.restParams = params._restString.split('/');
             }
+            params.queryParams = urlData.queryParams
             ret = {
                 path: matchedRoute.path,
                 func: matchedRoute.func,
