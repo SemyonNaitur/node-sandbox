@@ -12,14 +12,18 @@ class HttpServer {
     _created = false;
     /** @type {number} */
     _listeningOn;
+    _params = {
+        defaultHeaders: {},
+    };
 
     /**
      * @param {URouter} router 
      * @param {*} [logger]
      */
-    constructor(router, logger) {
+    constructor(router, logger, params) {
         this._router = router;
         this._logger = logger;
+        this.setParams(params);
     }
 
     _matchUrl(url) {
@@ -32,6 +36,41 @@ class HttpServer {
         } else {
             console.log(msg);
         }
+    }
+
+    _objClone(obj) {
+        return JSON.parse(JSON.stringify(obj));
+    }
+
+    _objMerge(...obj) {
+        return Object.assign({}, ...obj);
+    }
+
+    /**
+     * @param {Object} [params] 
+     * @return {Object | void}
+     */
+    params(params) {
+        if (!params) {
+            return this._objClone(this._params);
+        }
+        if (typeof params !== 'object') throw new TypeError(`Invalid params object ${params}`);
+        this._params = this._objMerge(this._params, this._objClone(params));
+    }
+
+    /**
+     * @param {string} property 
+     * @param {*} value 
+     * @return {*}
+     */
+    param(property, value) {
+        if (typeof value === 'undefined') {
+            const val = this._params[property];
+            return (val && (typeof val === 'object')) ? this._objClone(val) : val;
+        }
+        const update = {};
+        update[property] = this._objClone(value);
+        this._params = this._objMerge(this._params, update);
     }
 
     /**
@@ -72,6 +111,7 @@ class HttpServer {
      * @param {IncomingMessage} req
      * @return {string} 
      */
+
     getUri(req) {
         // TODO: handle scheme
         return `http://${req.headers.host}${req.url}`;
@@ -81,9 +121,24 @@ class HttpServer {
      * @param {ServerResponse} res 
      * @param {string} data 
      * @param {number} [code=200] 
+     * @param {Object} [headers={}]
      */
-    writeHtml(res, data, code = 200) {
-        res.writeHead(code, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
+    writeHtml(res, data, code = 200, headers = {}) {
+        headers = this._objMerge(this.param('defaultHeaders'), headers, { 'Content-Type': 'text/html' });
+        res.writeHead(code, headers);
+        res.write(data);
+        res.end();
+    }
+
+    /**
+     * @param {ServerResponse} res 
+     * @param {string} data 
+     * @param {number} [code=200] 
+     * @param {Object} [headers={}]
+     */
+    writeJson(res, data, code = 200, headers = {}) {
+        headers = this._objMerge(this.param('defaultHeaders'), headers, { 'Content-Type': 'application/json' });
+        res.writeHead(code, headers);
         res.write(data);
         res.end();
     }
