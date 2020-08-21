@@ -5,6 +5,11 @@ const http = require('http');
  * @typedef { import('../utils/router').URouter } URouter
  */
 
+/**
+ * @typedef {Object} IServerParams
+ * @prop {Object} [defaultHeaders]
+ */
+
 class HttpServer {
     /** @type {URouter} */
     _router;
@@ -12,7 +17,6 @@ class HttpServer {
     _logger;
     /** @type {Server} */
     _server;
-    _created = false;
     /** @type {number} */
     _listeningOn;
     _params = {
@@ -21,7 +25,7 @@ class HttpServer {
 
     /**
      * @param {URouter} router 
-     * @param {*} [logger]
+     * @param {Object} [logger]
      */
     constructor(router, logger, params) {
         this._router = router;
@@ -35,7 +39,7 @@ class HttpServer {
 
     _log(msg) {
         if (this._logger) {
-
+            // TODO
         } else {
             console.log(msg);
         }
@@ -54,7 +58,7 @@ class HttpServer {
             return this._objMerge({}, this._params);
         }
         if (typeof params !== 'object') throw new TypeError(`Invalid params object ${params}`);
-        this._params = this._objMerge(this._params, this._objMerge({}, params));
+        this._params = this._objMerge(this._params, params);
     }
 
     /**
@@ -76,7 +80,7 @@ class HttpServer {
      * @return {HttpServer}
      */
     createServer() {
-        if (this._created) throw new Error('Server already created');
+        if (this._server) throw new Error('Server already created');
         const server = http.createServer((req, res) => {
             this._log('--- Request start ---');
             this._log(req.url);
@@ -91,7 +95,6 @@ class HttpServer {
             this._log('--- Request end ---');
         });
         this._server = server;
-        this._created = true;
         return this;
     }
 

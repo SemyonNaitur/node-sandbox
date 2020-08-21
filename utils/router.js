@@ -45,6 +45,7 @@ class URouter {
 
     /**
      * @param {{routes: IRoute[]}} routes
+     * @param {Object} [logger]
      */
     constructor(config, logger = null) {
         const routes = config?.routes;
@@ -79,7 +80,7 @@ class URouter {
                 }
             }
 
-            if (route.path === 'not-found') {
+            if ((typeof route.path === 'string') && (this._trim(route.path, '/') === 'not-found')) {
                 this._notFoundRoute = route;
             }
             i++;
@@ -112,7 +113,7 @@ class URouter {
      * Leading/trailing '/'s are removed.
      */
     _parsePathString(path) {
-        let patt = path.replace(/^\/|\/$/g, ''); // trim '/'
+        let patt = this._trim(path, '/');
         patt = patt.replace(/:([^/]+)/g, '(?<$1>[^/]+)'); // parse params
         patt = patt.replace(/\.{3}$/, '(?<_restString>.+)?'); // parse rest string
         this._log(patt);
@@ -121,7 +122,7 @@ class URouter {
 
     _parseUrl(url) {
         let [path, queryString] = url.split('?');
-        path = path.replace(/\/{2,}/g, '/').replace(/^\/|\/$/g, '');
+        path = this._trim(path.replace(/\/{2,}/g, '/'), '/');
         const queryParams = {};
         queryString?.split('&').forEach(param => {
             const [key, value] = param.split('=');
@@ -132,7 +133,7 @@ class URouter {
 
     _log(msg) {
         if (this._logger) {
-
+            // TODO
         } else {
             console.log(msg);
         }
@@ -140,6 +141,11 @@ class URouter {
 
     _objMerge(...obj) {
         return Object.assign({}, ...obj);
+    }
+
+    _trim(str, char) {
+        const rgx = new RegExp(`^\\${char}*|\\${char}*$`, 'g');
+        return str.replace(rgx, '');
     }
 
     /**
@@ -167,7 +173,7 @@ class URouter {
         }
 
         if (route) {
-            params = this._objMerge(params);
+            params = this._objMerge({}, params);
             if (params._restString) {
                 params.restParams = params._restString.split('/');
             }
