@@ -6,6 +6,9 @@ const routes = [
     { path: '/print-request', func: printRequest },
     { path: 'cat-id-prop/:cat/:id/:prop', func: catIdProp },
     { path: 'cat-id-props/:cat/:id/...', func: catIdProps },
+    { path: /regex\/path/, func: regexPath },
+    { path: (urlPath) => ((urlPath === 'func-path') ? { works: true } : false), func: funcPath },
+    { regex: /regex-only/, func: regexOnly },
     { path: 'not-found', func: notFound },
 ];
 
@@ -14,6 +17,7 @@ const port = namedArgs['port'] || namedArgs['p'] || 8080;
 
 const router = new URouter({ routes });
 const server = new HttpServer(router);
+server.param('defaultHeaders', { 'Cache-Control': 'no-cache, no-store, must-revalidate' });
 server.createServer().listen(port);
 
 function extractNamedArgs(args) {
@@ -54,6 +58,18 @@ function catIdProps(req, res, params) {
     }
     const data = `Displaying properties '${params.restParams.join()}' of item #${params.id} from category '${params.cat}'.`;
     server.writeHtml(res, data);
+}
+
+function regexPath(req, res, params) {
+    server.writeHtml(res, 'regex path works');
+}
+
+function funcPath(req, res, params) {
+    server.writeHtml(res, `func path ${(params.works ? 'works' : '')}`);
+}
+
+function regexOnly(req, res, params) {
+    server.writeHtml(res, 'regex only works');
 }
 
 function notFound(req, res, params) {

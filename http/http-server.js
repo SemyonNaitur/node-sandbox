@@ -1,14 +1,17 @@
 'use strict'
 const http = require('http');
-const URouter = require('../utils/router');
+
+/**
+ * @typedef { import('../utils/router').URouter } URouter
+ */
 
 class HttpServer {
     /** @type {URouter} */
     _router;
+    /** @type {Object} */
+    _logger;
     /** @type {Server} */
     _server;
-    /** @type {*} */
-    _logger;
     _created = false;
     /** @type {number} */
     _listeningOn;
@@ -23,7 +26,7 @@ class HttpServer {
     constructor(router, logger, params) {
         this._router = router;
         this._logger = logger;
-        this.setParams(params);
+        this.params(params);
     }
 
     _matchUrl(url) {
@@ -38,10 +41,6 @@ class HttpServer {
         }
     }
 
-    _objClone(obj) {
-        return JSON.parse(JSON.stringify(obj));
-    }
-
     _objMerge(...obj) {
         return Object.assign({}, ...obj);
     }
@@ -52,10 +51,10 @@ class HttpServer {
      */
     params(params) {
         if (!params) {
-            return this._objClone(this._params);
+            return this._objMerge({}, this._params);
         }
         if (typeof params !== 'object') throw new TypeError(`Invalid params object ${params}`);
-        this._params = this._objMerge(this._params, this._objClone(params));
+        this._params = this._objMerge(this._params, this._objMerge({}, params));
     }
 
     /**
@@ -66,10 +65,10 @@ class HttpServer {
     param(property, value) {
         if (typeof value === 'undefined') {
             const val = this._params[property];
-            return (val && (typeof val === 'object')) ? this._objClone(val) : val;
+            return (val && (typeof val === 'object')) ? this._objMerge({}, val) : val;
         }
         const update = {};
-        update[property] = this._objClone(value);
+        update[property] = this._objMerge({}, value);
         this._params = this._objMerge(this._params, update);
     }
 
@@ -81,13 +80,13 @@ class HttpServer {
         const server = http.createServer((req, res) => {
             this._log('--- Request start ---');
             this._log(req.url);
-            const matchedRoute = this._matchUrl(req.url);
+            const matched = this._matchUrl(req.url);
 
-            if (!matchedRoute) {
+            if (!matched) {
                 res.writeHead(404);
                 res.end('Not Found.');
             } else {
-                matchedRoute.func(req, res, matchedRoute.params);
+                matched.route.func(req, res, matched.params);
             }
             this._log('--- Request end ---');
         });
