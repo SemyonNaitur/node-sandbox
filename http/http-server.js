@@ -110,6 +110,7 @@ class HttpServer {
      * @param {IncomingMessage} req
      * @return {string} 
      */
+
     getUri(req) {
         // TODO: handle scheme
         return `http://${req.headers.host}${req.url}`;
