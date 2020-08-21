@@ -138,7 +138,7 @@ class HttpServer {
     writeJson(res, data, code = 200, headers = {}) {
         headers = this._objMerge(this.param('defaultHeaders'), headers, { 'Content-Type': 'application/json' });
         res.writeHead(code, headers);
-        res.write(data);
+        res.write(JSON.stringify(data));
         res.end();
     }
 
